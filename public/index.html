@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Alpine.js Table</title>
+  <meta name="description" content="...">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="bootstrap-reboot.min.css">
+  <link rel="stylesheet" href="style.css">
+  <script src="//unpkg.com/alpinejs" defer></script>
+</head>
+
+<body>
+  <script>
+    function peopleTable() {
+      return {
+        offset: 0,
+        limit: 5,
+        isLoading: false,
+        people: null,
+        peopleCount: 0,
+        buttons: 0,
+        fetchPeople() {
+          this.isLoading = true;
+          fetch(`/v1/people?offset=${this.offset}&limit=${this.limit}`)
+            .then(res => res.json())
+            .then(data => {
+              this.isLoading = false;
+              this.people = data.people;
+              this.peopleCount = data.peopleCount;
+              this.renderButtons();
+            });
+        },
+        renderButtons() {
+          let c = Math.ceil(this.peopleCount / this.limit)
+          this.buttons = c;
+        }
+      }
+    }
+  </script>
+
+  <div id="main">
+    <div x-data="peopleTable()" x-init="fetchPeople()">
+      updating: <span x-text="isLoading"></span><br>
+      people: <span x-text="peopleCount"></span><br>
+      offset <select name="offset" id="offset" x-model="offset">
+        <option value="0">0</option>
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+        <option value="20">20</option>
+      </select><br>
+      limit <select name="limit" id="limit" x-model="limit">
+        <option value="5">5</option>
+        <option value="10">10</option>
+        <option value="15">15</option>
+        <option value="20">20</option>
+      </select><br>
+      <button type="submit" @click="fetchPeople()" :disabled="isLoading">
+        Update
+      </button>
+      <br>
+      <br>
+      <div class="loader" x-show="isLoading"></div>
+      <template x-if="people">
+        <div>
+          <table>
+            <tr>
+              <th>Firstname</th>
+              <th>Lastname</th>
+            </tr>
+            <template x-for="person in people" :key="person.ID">
+              <tr>
+                <td><span x-text="person.Firstname"></span></td>
+                <td><span x-text="person.Lastname"></span></td>
+              </tr>
+            </template>
+          </table>
+
+          <button @click="offset -= limit; fetchPeople()" :disabled="offset <= limit">previous</button>
+          <template x-for="b in buttons">
+            <button x-text="b"
+            @click="offset = (b*limit); fetchPeople()"
+            ></button>
+          </template>
+          <button @click="offset += limit; fetchPeople()">next</button>
+
+        </div>
+      </template>
+    </div>
+  </div>
+
+</body>
+
+</html>
